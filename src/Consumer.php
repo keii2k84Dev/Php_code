@@ -1,14 +1,6 @@
 <?php
 /**
- *
- * TopicMatchコンシューマクラス
- * article_idと本文をMQから受け取り、この記事に紐づくtopic_idを求める
- *
- * @package Yahoo_News_Theme
- * @subpackage Consumer
- *
- * @author sosada
- * @version $id$
+ * Class Consumer
  */
 class Consumer {
     // エラー無視文言
@@ -28,10 +20,7 @@ class Consumer {
      *
      */
     public function initHandler() {
-        Logger::get()->info('---- TopicMatchControl::init start. ----');
         new SignalHandler();
-        new \Yahoo\News\Theme\Library\Handler\ApplicationHandler();
-        Logger::get()->info('---- TopicMatchControl::init end. ----');
     }
 
     /**
@@ -46,24 +35,21 @@ class Consumer {
             try {
                 // sigterm を受け取ったとき
                 if (SignalHandler::getSigTermStatus()) {
-                    Logger::get()->info('Signal TERM status is true. Shutdown after this process has been completed.');
+                    //Logger::get()->info('Signal TERM status is true. Shutdown after this process has been completed.');
                     break;
                 }
                 //main process 
                 // mqからデータ受信
                 $data = json_decode($consumer->receive(), true);
-                Logger::get()->debug('receive data from MQ :' . $data);
                 // 紐付け処理実行
                 if ($this->process($data)) {
                     //mqにackする。(紐付け処理に失敗した場合、requeueするためackしない。)
                     $consumer->send(json_encode(['messageId' => $data['messageId']]));
-                    Logger::get()->debug('return ack to MQ. messageId : ' . $data['messageId']);
                 }
             } catch (\Exception $e) {
                 // 受け取るデータがない場合でもExceptionが吐かれてしまうので、その場合は無視する
                 if (strpos($e->getMessage(), self::IGNORE_ERROR) === false) {
                     // ログ出力
-                    Logger::get()->warning(' consumer exception :' . $e->getMessage());
                 }
                 // consumerクローズ
                 if (!empty($consumer)) {
@@ -87,7 +73,7 @@ class Consumer {
         // エンドポイント
         $url = 'url';
 
-        Logger::get()->debug('consumer url :' . $url);
+        //Logger::get()->debug('consumer url :' . $url);
 
         // option設定
         $options = [
@@ -95,7 +81,7 @@ class Consumer {
             'headers' => ['headerOption' => 'headerOption'],
             'context' => 'dummy'
         ];
-        return new Client($url, $options);
+        return new \WebSocket\Client($url, $options);
     }
 
     /**
@@ -122,17 +108,14 @@ class Consumer {
 
         $this->setStartTime();
         $result = true;
-        Logger::get()->info('---- TopicMatchControl::process start. ----');
         try {
             //todo MAIN処理
 
         } catch (\Exception $e) {
             $exception_message = $e->getMessage();
-//            Logger::get()->warning("Retry Exception message:{$exception_message} MQ messageId:{$data['messageId']} article_id:{$article_id}");
             $result = false;
         }
         $time = $this->getTime();
-//        Logger::get()->info('---- TopicMatchControl::process end. [ total_process_time = ' . $time . ' ] ----');
         return $result;
     }
 

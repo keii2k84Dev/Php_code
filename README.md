@@ -1,1 +1,2 @@
-# Consumer Skeleton used by  websocket
+# Consumer Skeleton for pulsarMQ
+
