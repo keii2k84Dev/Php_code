@@ -1,0 +1,1 @@
+## skeleton consumer for messageQueue
